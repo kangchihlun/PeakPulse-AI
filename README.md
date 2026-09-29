@@ -1,309 +1,113 @@
-# ⚡ PeakPulse AI — Real-Time Financial Market Anomaly Detection Engine
+# 🪙 DAO VANG — PeakPulse AI
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python: 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
-[![Tests: 484+ Passed](https://img.shields.io/badge/Tests-484%2B%20Passed-brightgreen.svg)](#)
 [![Languages](https://img.shields.io/badge/Language-Vi%E1%BA%BFt%20%7C%20English%20%7C%20%E4%B8%AD%E6%96%87%20%7C%20%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F%20%7C%20%ED%95%9C%EA%B5%AD%EC%96%B4-blue)](#)
 
 [🇻🇳 Tiếng Việt](README.md) | [🇬🇧 English](README.en.md) | [🇨🇳 简体中文](README.zh-CN.md) | [🇷🇺 Русский](README.ru.md) | [🇰🇷 한국어](README.ko.md)
 
 ---
 
-> **PeakPulse AI — Time-Series Machine Learning & Anomaly Detection Radar**  
-> *Hệ thống phân tích dữ liệu lớn và dự báo các giai đoạn biến động bất thường (Volatility Regimes & Distribution Phases) trên thị trường tài chính phái sinh bằng Máy học thời gian thực.*
+> **DAO VANG — 基于机器学习的加密货币派发/见顶预警系统 (Distribution Radar)**  
+> *基于机器学习与实时衍生品数据（Binance USD-M Futures），针对加密货币衍生品市场顶部分析与派发阶段（Top Formation / Distribution Phase）的早期预警系统。*
 
 ---
 
-## 🎯 1. GIỚI THIỆU TỔNG QUAN
+## 🎯 1. 概述与简介
 
-**PeakPulse AI** là nền tảng phân tích dữ liệu lớn và nhận diện sớm các mẫu hình bất thường của thị trường tài chính dựa trên dữ liệu dòng tiền và sổ lệnh phái sinh thời gian thực (Point-in-Time Order-Flow & Derivatives Data).
+**DAO VANG（淘金者）** 是一个专为加密货币衍生品市场设计的分析与早期预警平台，旨在通过实时衍生品数据（Point-in-Time Derivatives Data）识别价格派发/见顶信号（Distribution Phase / Pump & Dump）。
 
-Khác với các công cụ phân tích kỹ thuật truyền thống chỉ dựa vào giá đóng/mở cửa (OHLCV), **PeakPulse AI** kết hợp dữ liệu hành vi vi mô (Funding Rates, Open Interest, Taker Volume Ratios, Account Positioning) và mô hình **Machine Learning (Walk-Forward Validated)** để đưa ra đánh giá xác suất phân phối và biến động bất thường với độ tin cậy cao.
+与仅依赖价格与成交量（OHLCV）的传统技术分析工具不同，**DAO VANG** 结合了深度资金流向指标（资金费率 Funding Rate、持仓量 Open Interest、主动买卖比例 Taker Buy/Sell Ratio、大户/散户持仓与多空账户比）以及经过 **Walk-Forward Validated（前向走查验证）的机器学习模型**，提供高可靠性的见顶派发概率评估。
 
-> 💡 **Triết lý vận hành:** Hệ thống hoạt động như một **Radar thông minh giám sát thị trường (Market Intelligence Radar)** với nguyên tắc Human-in-the-loop. PeakPulse AI hoàn toàn phi lưu ký (Non-custodial) và không can thiệp đặt lệnh tự động.
+> 💡 **核心运行理念：** 本系统作为 **被动预警雷达（Human-in-the-loop）** 运行。DAO VANG **不进行自动下单（No Auto-Trading）**，所有交易决策完全由用户自主掌控。
 
----
-
-## 🔎 2. TRẠNG THÁI PHIÊN BẢN PRODUCTION
-
-Bản production được định danh bằng model ID và checksum, không bằng tên gọi
-marketing hoặc số liệu từ một báo cáo lịch sử.
-
-| Trường | Giá trị đang cấu hình |
-| :--- | :--- |
-| **Model ID** | **frozen_20260906_105716_bc3c369b** |
-| **Train cutoff** | **2026-07-28T19:05:39.999000+07:00** |
-| **Frozen threshold** | **0.4100000000000001** |
-| **Calibration** | **isotonic_v1** |
-| **Model SHA-256** | **27961bc6c9a24e52136d00f208258343e8d5b75980fe156dbfba699264f51a12** |
-| **Calibrator SHA-256** | **0e425413f24a3a96ece91d1e201f0be4dd3709526733d19a19d649871b3c72db** |
-
-> **Mục tiêu mới:** pipeline huấn luyện/materialize mặc định dùng
-> `distribution_short_v2`: bắt cú giảm **tối thiểu 20% trong 24 giờ**, với
-> MAE tối đa **+4%**. Bundle production ghi ở bảng trên vẫn là model v1 cho
-> mục tiêu 8%; nó chỉ được giữ làm bằng chứng lịch sử và không được mô tả hay
-> promote như model 20%. Cần huấn luyện, hiệu chỉnh và khóa protocol v2 mới
-> trước khi đổi `scanner.frozen_model_id`.
-
-Bundle hiện lưu training precision **0.3896**, Brier **0.1859** và ECE
-**0.0261**. Đây là số liệu đi kèm quá trình tạo bundle, chưa phải một
-forward-test độc lập sau cutoff và không chứng minh ROI hay win rate.
-
-Các cơ chế chống lookahead, embargo, as-of join, calibration, checksum và
-fail-closed serving đều có kiểm thử hồi quy. Chỉ số hiệu năng live chỉ được
-công bố khi báo cáo gắn đúng model ID/checksum, cửa sổ dữ liệu, sample/event
-count và kết quả theo regime. Xem
-[mô hình production và mức độ bằng chứng](docs/PRODUCTION_MODEL.md).
-
-### 🔍 Điểm nổi bật về mặt kỹ nghệ
-
-- **Ground-truth có phiên bản:** v1 lịch sử dùng mục tiêu 8%; contract v2 mới
-  dùng drawdown 20%/24h, MAE tối đa 4%. Mỗi bundle đóng băng contract trong
-  metadata nên hai tập bằng chứng không bị trộn.
-- **Xác suất được kiểm soát:** live serving yêu cầu calibrator hợp lệ, feature
-  đầy đủ, dữ liệu đủ mới và checksum khớp; nếu không hệ thống fail closed.
-- **Human-in-the-loop:** scanner phát cảnh báo và ghi nhận outcome; không tự
-  động đặt lệnh và challenger không tự thay champion.
-- **Dữ liệu point-in-time:** as-of join và test leakage giảm rủi ro dùng thông
-  tin tương lai; kết quả kiểm thử không được diễn giải thành bảo đảm tuyệt đối.
+> 📎 当前生产模型、SHA-256 校验和及证据边界以 [生产模型说明](docs/PRODUCTION_MODEL.md) 为准。
 
 ---
 
-## ✨ 3. CÁC TÍNH NĂNG NỔI BẬT
+## ✨ 2. 核心特性
 
-- 🔍 **Live Scanner Daemon (24/7):** Tự động quét theo thời gian thực hàng trăm cặp giao dịch Binance Futures theo chu kỳ nến 5 phút.
-- 📊 **Cơ chế Candidate Filter v2 & Pump Filter:** Lọc danh sách coin biến động mạnh, phát hiện bất thường dòng tiền và nguy cơ đảo chiều nhanh chóng.
-- 🚨 **Market Anomaly Radar:** Gắn nhãn độc lập cho đột biến khối lượng, funding cực trị/đổi dấu, đảo chiều, OI unwind, đòn bẩy tích tụ, taker sell imbalance, long/short crowding và phá vỡ giả; điểm anomaly 0-100 chỉ là quan sát, không phải xác suất model.
-- 🤖 **Machine Learning & Self-Learning Daemon:**
-  - Pipeline huấn luyện hỗ trợ calibration; live alert chỉ bật khi bundle có calibration artifact hợp lệ.
-  - Đánh giá mô hình bằng **Walk-Forward Validation**, embargo và các kiểm tra hồi quy point-in-time nhằm giảm rủi ro rò rỉ dữ liệu.
-- 📲 **Cảnh báo Telegram 24/7:** Gửi thông báo tín hiệu trực tiếp về Telegram cá nhân/group với đầy đủ chỉ số phân tích và đường dẫn mở thẳng coin trên Dashboard.
-- 💻 **Giao diện Web Dashboard (React + Vite + TypeScript):**
-  - Biểu đồ nến tương tác (Candlestick Chart) chuẩn Trading.
-  - Bảng tổng hợp tín hiệu thời gian thực (Signal Feed).
-  - Trạng thái sức khỏe hệ thống, lịch sử backtest & theo dõi watchlist linh hoạt.
-- 🐳 **Đóng gói Docker Ready:** Sẵn sàng triển khai 1-click bằng Docker & Docker Compose trên VPS/Server.
-
----
-
-## 🛠 4. KIẾN TRÚC KỸ THUẬT (TECH STACK)
-
-### 🔹 Backend & Data Engine (Python)
-- **Core Framework:** Python 3.12, Pydantic v2, Typer (CLI).
-- **Web & API Server:** `ThreadingHTTPServer` + REST endpoints; frontend hiện refresh dữ liệu theo chu kỳ.
-- **Data Engine & Storage:** DuckDB (Query engine phân tích dữ liệu siêu tốc), Apache Parquet, Pandas.
-- **Logging & Security:** `structlog` tích hợp cơ chế tự động ẩn secret/key (`redact_secrets`).
-
-### 🔹 Frontend (Web Dashboard)
-- **Framework:** React 19, TypeScript, Vite.
-- **Styling & UI:** Modern Vanilla CSS (Clean & Responsive).
-- **Charts:** Lightweight Candlestick Charts & polling-based live snapshots.
-
-### 🔹 Machine Learning & Signal Processing
-- **Validation Engine:** Walk-Forward Splitter, Event-based Validation, Out-of-fold Calibration.
-- **Model Storage:** Frozen Model Bundles (Hash-verified metadata & config).
+- 🔍 **全天候实时扫描器 (Live Scanner Daemon 24/7)：** 以 5 分钟 K 线为周期，实时自动扫描数百个 Binance Futures 交易对。
+- 📊 **Candidate Filter v2 & Pump Filter 筛选机制：** 快速过滤高波动币种，精准捕捉资金流异常与快速反转风险。
+- 🤖 **机器学习与自学习守护进程 (Machine Learning & Self-Learning Daemon)：**
+  - 支持在 shadow 模式中评估已校准的 challenger；challenger 不会自动晋升。
+  - 采用 **Walk-Forward Validation（前向走查验证）** 与回归检查来降低未来数据泄漏风险。
+- 📲 **Telegram 24/7 实时推送：** 将预警信号直接发送至个人/群组 Telegram，附带完整的分析指标与 Dashboard 直达链接。
+- 💻 **Web Dashboard 可视化界面 (React + Vite + TypeScript)：**
+  - 专业级交互式 K 线图（TradingView 风格）。
+  - 实时信号汇总表（Signal Feed）。
+  - 系统健康状态监控、历史 Backtest 记录与灵活的 Watchlist 观察列表。
+- 🐳 **Docker 快速部署：** 支持 Docker & Docker Compose 一键部署至 VPS/服务器。
 
 ---
 
-## 🔄 5. CƠ CHẾ HOẠT ĐỘNG (PIPELINE)
+## 🛠 3. 技术架构 (TECH STACK)
+
+### 🔹 后端与数据引擎 (Python)
+- **核心框架：** Python 3.12, Pydantic v2, Typer (CLI)。
+- **Web & API 服务：** `ThreadingHTTPServer` REST API 与静态前端服务。
+- **数据引擎与存储：** DuckDB（极速分析型数据查询引擎）, Apache Parquet, Pandas。
+- **日志与安全：** `structlog` 嵌入敏感信息自动脱敏机制 (`redact_secrets`)。
+
+### 🔹 前端 (Web Dashboard)
+- **框架：** React 19, TypeScript, Vite。
+- **样式与 UI：** Modern Vanilla CSS（简洁且响应式）。
+- **图表：** Lightweight Candlestick Charts & 实时数据流。
+
+### 🔹 机器学习与信号处理
+- **验证引擎：** Walk-Forward Splitter, Event-based Validation, Out-of-fold Calibration。
+- **模型存储：** Frozen Model Bundles（哈希校验元数据与配置）。
+
+---
+
+## 🔄 4. 运行流程 (PIPELINE)
 
 ```mermaid
 flowchart LR
-    A[Binance REST API] --> B[Data Collectors]
-    B --> C[DuckDB Storage / Parquet]
-    C --> D[Feature Builder & Normalizer]
-    D --> E[Scoring & Frozen ML Model]
-    E --> F{Kiểm tra Quality Gate}
-    F -->|Đạt serving contract và frozen threshold| G[Telegram Alerts Bot]
-    F -->|Hiển thị Realtime| H[React Web Dashboard]
+    A[Binance REST API] --> B[数据采集器 Data Collectors]
+    B --> C[DuckDB 存储 / Parquet]
+    C --> D[特征构建与归一化 Feature Builder]
+    D --> E[评分与 Frozen ML 模型]
+    E --> F{Quality Gate 质量关卡}
+    F -->|通过 serving contract 与 frozen threshold| G[Telegram 预警 Bot]
+    F -->|实时展示| H[React Web Dashboard]
 ```
 
-1. **Thu thập dữ liệu (Collect):** Quét nến OHLCV 5m, Open Interest, Funding Rate, Taker Volume và Long/Short Ratio từ Binance USD-M Futures.
-2. **Chuẩn hóa (Normalize & As-of Join):** Khớp dữ liệu theo mốc Point-in-Time và chạy các kiểm tra hồi quy chống lookahead.
-3. **Trích xuất Đặc trưng (Feature Engineering):** Tính toán các chỉ số biến động dòng tiền, tỷ lệ biến động OI vs Price, lực mua/bán Taker chủ động.
-4. **Suy luận & Cảnh báo (Inference & Alert):** Đưa qua mô hình Frozen ML để tính toán xác suất phân phối; đồng thời chạy lớp Market Anomaly Radar độc lập, lưu snapshot và hiển thị các quan sát trên Dashboard. Telegram vẫn chỉ gửi các tín hiệu vượt qua serving contract và quality gate.
-
-📖 *Xem chi tiết tại:* [**Tài liệu Kiến trúc Toàn diện (docs/ARCHITECTURE.md)**](docs/ARCHITECTURE.md)
+1. **数据采集 (Collect)：** 采集 Binance USD-M Futures 的 5m OHLCV、持仓量 (OI)、资金费率 (Funding Rate)、Taker 成交量与多空比。
+2. **归一化与 As-of Join：** 按 Point-in-Time 对齐数据，并运行防止 lookahead 的回归检查。
+3. **特征工程 (Feature Engineering)：** 计算资金流波动指标、OI 与价格变化率对比、Taker 主动买卖动能。
+4. **推理与预警 (Inference & Alert)：** 传入 Frozen ML 模型计算派发概率，检查冷却状态 (Cooldown)，并将预警推送至 Telegram 与 Dashboard。
 
 ---
 
-## 📂 6. CẤU TRÚC THƯ MỤC DỰ ÁN (PROJECT DIRECTORY MAP)
+## 🔒 5. 安全与隐私 (SECURITY & PRIVACY)
 
-```
-dao_vang/
-├── configs/            # File cấu hình mẫu (default.example.yaml, live.yaml)
-├── docs/               # Trung tâm tài liệu (Architecture, Developer Guide, ADRs, Setup)
-│   ├── adr/            # Architecture Decision Records (ADR-001 đến ADR-007)
-│   ├── ARCHITECTURE.md # Sơ đồ kiến trúc & luồng dữ liệu chi tiết
-│   ├── DEVELOPER_GUIDE.md # Hướng dẫn viết code, thêm collector, feature, scoring
-│   └── ...
-├── frontend/           # Ứng dụng Web Dashboard (React 19 + Vite + TypeScript)
-│   └── src/components/ # Các component giao diện (MainWorkspace, SignalFeed, AlphaLab...)
-├── scripts/            # Script vận hành, supervisor tự khởi động lại, dev_check.py
-├── src/dao_vang/       # Toàn bộ mã nguồn cốt lõi Backend (Modular Monolith)
-│   ├── alerts/         # Telegram alert engine & định dạng bản tin song ngữ
-│   ├── alpha_lab/      # Nghiên cứu định lượng (Triple barrier, Meta labeling, Regime)
-│   ├── baselines/      # Mô hình đối chuẩn (Rule-based & Logistic regression)
-│   ├── cli/            # Giao diện dòng lệnh Typer (`dao-vang`)
-│   ├── config/         # Quản lý cấu hình Pydantic v2
-│   ├── data/           # Binance collectors, schemas, DuckDB & Parquet storage
-│   ├── domain/         # Domain entities, enums, error models & time helpers
-│   ├── experiments/    # Experiment runner, self-learning feedback & forward test
-│   ├── features/       # Feature registry & point-in-time feature builders
-│   ├── labels/         # Ground truth labeling engine (sụt giảm 8% trong 6-24h)
-│   ├── logging/        # Structured logging với cơ chế tự động ẩn secret
-│   ├── scanner/        # 24/7 Live Scanner Daemon, Pump Filter, Watchlist tracker
-│   ├── scoring/        # Frozen ML inference, BTC context & evidence scoring
-│   ├── validation/     # Walk-forward validation, point-in-time leakage audits & metrics
-│   └── web/            # Threaded REST API & static frontend server
-└── tests/              # 484+ bài kiểm thử tự động (Unit, Integration, Leakage, QA)
-```
+- **Git 无敏感信息暴露：** 包含 Telegram Bot Token 等敏感信息的 `.env` 文件已被 `.gitignore` 完全屏蔽。
+- **日志脱敏：** 在写入日志文件前，自动过滤敏感关键词（`api_key`, `secret`, `password`, `token`）。
+- **无需私钥：** 扫描仅使用 Binance 公开 API (Public Endpoints)，无需绑定交易 API Key，最大限度降低安全风险。
 
 ---
 
-## 🔒 7. AN TOÀN & BẢO MẬT (SECURITY & PRIVACY)
+## 🚀 6. 快速开始 (QUICK START)
 
-- **Không lưu trữ Secret/Token trong Git:** File `.env` chứa Telegram Bot Token được chặn hoàn toàn bởi `.gitignore`.
-- **An toàn Log:** Tự động lọc các từ khóa nhạy cảm (`api_key`, `secret`, `password`, `token`) trước khi ghi file log.
-- **Public API Ready:** Không yêu cầu Binance API Secret để quét (dùng public endpoints), hạn chế tối đa rủi ro lộ khóa API giao dịch.
-
----
-
-## 🚀 7. HƯỚNG DẪN KHỞI CHẠY (RUNNING GUIDE)
-
-Hệ thống được thiết kế tách biệt hoàn toàn giữa **Môi trường Phát triển (Dev)** và **Môi trường Vận hành Thực tế (Live)** để đảm bảo an toàn dữ liệu và tối ưu hiệu năng.
-
-```
-┌─────────────────────────┬──────────────────────────┬─────────────────────────┐
-│ Tiêu chí                │ Môi trường DEV           │ Môi trường LIVE         │
-├─────────────────────────┼──────────────────────────┼─────────────────────────┤
-│ Mục đích                │ Code tính năng, thử UI   │ Chạy 24/7 quét thị trường│
-│ Cổng mặc định (Port)    │ Backend 8000 / Vite 8088 │ Web API 8001            │
-│ Thư mục dữ liệu (Data)  │ data/ (data/dev.duckdb)  │ data_live/ (live.duckdb)│
-│ Hot-Reload              │ Bật (Frontend & Backend) │ Tắt (Tối ưu hiệu năng)  │
-└─────────────────────────┴──────────────────────────┴─────────────────────────┘
-```
-
----
-
-### 💻 A. HƯỚNG DẪN CHẠY BẢN DEV (DEVELOPMENT MODE)
-
-Dành cho nhà phát triển muốn đóng góp code, chỉnh sửa mô hình Machine Learning hoặc tùy biến giao diện React.
-
-#### 1. Cài đặt môi trường ban đầu
+### 环境配置
 ```bash
-# Clone repository
+# 克隆项目仓库
 git clone https://github.com/mrcanlaco/Dao-Vang-Peak-Pulse.git
 cd Dao-Vang-Peak-Pulse
 
-# Tạo môi trường ảo Python và cài đặt dependencies
-python -m venv .venv
-source .venv/bin/activate  # Trên Windows: .\.venv\Scripts\activate
+# 使用 uv / pip 安装依赖
 pip install -e .
-
-# Cài đặt dependencies cho Frontend
-cd frontend && npm install && cd ..
 ```
 
-#### 2. Khởi chạy với Hot-Reload (2 Terminal)
-- **Terminal 1 — Backend Web API & Scanner Daemon:**
-  ```bash
-  python -m dao_vang.web.run --reload --port 8000
-  ```
-- **Terminal 2 — Frontend React + Vite:**
-  ```bash
-  cd frontend
-  npm run dev
-  ```
-  👉 Mở trình duyệt tại: `http://localhost:8088` *(Vite sẽ tự động proxy các request API sang port 8000)*.
-
-#### 3. Khởi chạy nhanh 1-Click trên Windows (Dev)
-- Nhấp đúp file `run_dev.bat` để chạy Web Server Dev.
-- (Tùy chọn) Nhấp đúp `run_scanner_dev.bat` để chạy tiến trình quét liên tục trên môi trường dev.
-
----
-
-### 🌐 B. HƯỚNG DẪN CHẠY BẢN LIVE (PRODUCTION / 24/7 LIVE RADAR)
-
-Dành cho việc triển khai máy chủ/VPS thực tế hoặc chạy nền ổn định trên máy tính cá nhân.
-
-#### Cách 1: Triển khai 1-Click bằng Docker Compose (Khuyên dùng cho VPS/Linux)
+### 使用 Docker Compose 一键启动 Scanner 与 Web UI
 ```bash
-# 1. Sao chép và cấu hình file môi trường
+# 从模板创建配置文件
 cp .env.docker.example .env.docker
 
-# 2. Điền thông tin cấu hình Telegram Bot (nếu muốn nhận thông báo)
-# nano .env.docker
-
-# 3. Khởi chạy toàn bộ hệ sinh thái (Scanner Daemon + API + Web Frontend)
-docker compose up -d --build
-
-# 4. Kiểm tra trạng thái và logs
-docker compose ps
-docker compose logs -f scanner
-```
-👉 Truy cập Dashboard tại: `http://localhost:8000` *(hoặc qua reverse proxy Nginx của bạn)*.
-
-#### Cách 2: Chạy trực tiếp trên Windows Server / PC (Tích hợp Supervisor tự phục hồi)
-- **Khởi động Web Live Dashboard:**
-  Nhấp đúp hoặc chạy file `run_live.bat`  
-  *(Tự động kích hoạt supervisor giám sát port `8001`, tự khởi động lại nếu có lỗi và ghi log xoay vòng tại `scripts/logs/web_live.log`)*.
-- **Khởi động Live Scanner Daemon:**
-  Nhấp đúp hoặc chạy file `run_scanner_live.bat`  
-  *(Quét liên tục chu kỳ 5 phút hàng trăm mã Binance Futures, phân tích dòng tiền và đẩy cảnh báo đến Telegram)*.
-
-#### Cách 3: Chạy trực tiếp bằng CLI trên Linux / Mac
-```bash
-# 1. Build bundle Frontend tĩnh
-cd frontend && npm run build && cd ..
-
-# 2. Khởi chạy Server Live với database riêng biệt data_live
-export DAO_VANG_WEB__PORT=8001
-export DAO_VANG_PATHS__DATA_DIR=data_live
-export DAO_VANG_SCANNER__DB_PATH=data_live/live.duckdb
-
-python -m dao_vang.web.run 8001
+# 启动完整系统 (Scanner + API Server + Frontend)
+docker-compose up -d
 ```
 
 ---
 
-### 🧪 C. KIỂM THỬ VÀ KIỂM TRA CHẤT LƯỢNG MÃ NGUỒN (TESTING & QA)
-
-Để kiểm tra toàn bộ chất lượng mã nguồn trước khi commit hoặc mở Pull Request:
-
-```bash
-# Chạy 1 lệnh kiểm tra toàn diện (Linter + Typecheck + Backend Tests + Frontend Build + Tự dọn rác)
-python scripts/dev_check.py
-
-# Hoặc chạy kiểm tra nhanh chỉ unit tests:
-python scripts/dev_check.py --fast
-
-# Hoặc chạy từng công cụ độc lập:
-uv run ruff check .          # Linter & Formatter
-uv run pyright               # Type Checking
-.\.venv\Scripts\pytest.exe   # 484+ bài kiểm thử backend
-cd frontend && npm run build # Frontend TypeScript build
-```
-
----
-
-## 🗺 9. LỘ TRÌNH PHÁT TRIỂN (ROADMAP)
-
-- [ ] 🔌 **Đa sàn giao dịch (Multi-Exchange):** Mở rộng thu thập dữ liệu phái sinh từ Bybit, OKX Futures.
-- [ ] 🤖 **Nâng cấp Mô hình ML:** Thử nghiệm & tích hợp LightGBM, CatBoost và Sequential Models.
-- [ ] ⚡ **Real-time WebSocket Streaming:** Nâng cấp kênh thu thập dữ liệu sang WebSocket thời gian thực.
-- [ ] 📱 **Telegram Mini-App:** Tích hợp Web Dashboard trực tiếp trong Telegram bot.
-
----
-
-## 🤝 10. ĐÓNG GÓP CỘNG ĐỒNG (CONTRIBUTING)
-
-Dự án hoan nghênh mọi sự đóng góp từ cộng đồng nhà phát triển và trader toàn cầu:
-- 📖 Hướng dẫn chi tiết cho Contributor: [**docs/DEVELOPER_GUIDE.md**](docs/DEVELOPER_GUIDE.md)
-- 🤝 Quy chuẩn đóng góp & quy trình PR: [**CONTRIBUTING.md**](CONTRIBUTING.md)
-- 🛡 Quy tắc ứng xử cộng đồng: [**CODE_OF_CONDUCT.md**](CODE_OF_CONDUCT.md)
-- 🔒 Chính sách báo cáo an toàn: [**SECURITY.md**](SECURITY.md)
-
----
-
-*Dự án được thiết kế chuẩn mực theo nguyên tắc kỹ nghệ phần mềm hiện đại: Point-in-time Correctness, Modular Architecture và Strict Data Quality.*
+*本项目严格遵循现代软件工程规范设计：Point-in-time Correctness（时点正确性）、Modular Architecture（模块化架构）与 Strict Data Quality（严格数据质量）。*
