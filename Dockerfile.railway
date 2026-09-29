@@ -1,0 +1,74 @@
+# ============================================================
+# PeakPulse AI — Railway Dockerfile
+# Single container: scanner daemon + web API/React (Railway volumes cannot be
+# shared between services, and both processes use the same DuckDB store).
+# Frozen model bundles are baked into the image and seeded onto the volume at
+# startup by scripts/railway_start.sh.
+# Mount a Railway Volume at /app/data_live.
+# ============================================================
+
+# --- Stage 1: Frontend build (React + Vite) ---
+FROM node:22-slim AS frontend
+
+WORKDIR /frontend
+
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+
+COPY frontend/ ./
+RUN npm run build
+
+# --- Stage 2: Python builder ---
+FROM python:3.12-slim AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libatomic1 \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+WORKDIR /app
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project --no-dev
+
+COPY src/ ./src/
+RUN uv sync --frozen --no-dev
+
+# --- Stage 3: Runtime ---
+FROM python:3.12-slim AS runtime
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    libatomic1 \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /app/src /app/src
+COPY pyproject.toml uv.lock CHANGELOG.md ./
+COPY configs/ /app/configs/
+COPY scripts/ /app/scripts/
+COPY docs/ /app/docs/
+
+# Model bundles live outside /app/artifacts so the start script can seed
+# them onto the persistent volume without being shadowed by it.
+COPY artifacts/frozen_models/ /app/bundled_models/frozen_models/
+
+COPY --from=frontend /frontend/dist /app/frontend/dist
+
+ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONPATH="/app/src"
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV DAO_VANG_CONFIG_PATH=configs/live.yaml
+ENV PORT=8000
+
+RUN chmod +x /app/scripts/railway_start.sh
+
+EXPOSE 8000
+
+CMD ["/app/scripts/railway_start.sh"]

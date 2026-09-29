@@ -32,8 +32,10 @@ dao_vang_documentation_v1.0/
 dao_vang_phase_1_5_codex_execution_pack/
 
 # Data + artifacts sẽ mount qua volume, không copy vào image
+# (frozen_models is kept for Dockerfile.railway, which bakes the bundles in)
 data/
-artifacts/
+artifacts/*
+!artifacts/frozen_models/
 
 # Env files (sẽ truyền qua docker-compose env_file)
 .env
